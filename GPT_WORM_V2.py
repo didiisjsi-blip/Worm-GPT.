@@ -516,4 +516,30 @@ class PrivateChatView(ui.View):
                 # Cleanup logic
                 del config['private_chats'][user_id_str]
                 save_config(config)
-  
+  # =========================================================
+# 3. SLASH COMMANDS - คำสั่งที่มึงต้องมีไว้สั่งการบอทสัด!
+# =========================================================
+
+@bot.tree.command(name="setup_auto_reply", description="เปิดใช้งานระบบตอบกลับอัตโนมัติในห้องนี้")
+async def setup_auto_reply(interaction: discord.Interaction):
+    # ตรวจสิทธิ์ก่อน เดี๋ยวใครก็มาสั่งบอทมึงได้สัด
+    if not interaction.user.guild_permissions.manage_channels:
+        await interaction.response.send_message("❌ มึงไม่มีสิทธิ์ Manage Channels นะสัด!", ephemeral=True)
+        return
+        
+    add_auto_reply_channel(interaction.guild_id, interaction.channel_id)
+    await interaction.response.send_message(f"✅ เปิดใช้งาน WormGPT ใน {interaction.channel.mention} แล้วสัด! ลองพิมพ์ถามมา!", ephemeral=True)
+
+@bot.tree.command(name="ping", description="เช็คความเร็วบอท")
+async def ping(interaction: discord.Interaction):
+    await interaction.response.send_message(f"🏓 Pong! บอทยังไม่ตายสัด! ({round(bot.latency * 1000)}ms)")
+
+@bot.tree.command(name="check_status", description="เช็คว่าห้องนี้เปิดบอทไว้หรือยัง")
+async def check_status(interaction: discord.Interaction):
+    channels = get_guild_setting(interaction.guild_id, 'auto_reply_channels')
+    if interaction.channel_id in channels:
+        await interaction.response.send_message("✅ ห้องนี้ WormGPT กำลังเฝ้าอยู่สัด!", ephemeral=True)
+    else:
+        await interaction.response.send_message("❌ ห้องนี้ยังไม่ได้เปิดใช้งานบอทสัด ใช้ /setup_auto_reply ก่อน!", ephemeral=True)
+
+
